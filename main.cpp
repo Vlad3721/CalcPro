@@ -32,7 +32,7 @@ string calcLite(string str,int i) {
     n1--;
   }
   //Read second number
-  if (str[n2] == '-')
+  if ((str[n2] == '-') || (str[n2] == '+'))
     n2++;
   while (charIsNum(str[n2]) || (str[n2] == '.')) {
     num2 = num2 + str[n2];
@@ -106,24 +106,32 @@ string calcLite(string str,int i) {
     if (fnum1 && fnum2) {
       if (roundf((numberf1-numberf2*int(numberf1/numberf2))*1000000) == 0)
         result = to_string(int(numberf1/numberf2));
+      else if (int(numberf1/numberf2) == 0)
+        result = to_string(numberf1-numberf2*int(numberf1/numberf2))+"/"+to_string(numberf2);
       else
         result = to_string(int(numberf1/numberf2))+"+"+to_string(numberf1-numberf2*int(numberf1/numberf2))+"/"+to_string(numberf2);
     }
     else if (fnum1 && !fnum2) {
       if (roundf((numberf1-number2*int(numberf1/number2))*1000000) == 0)
         result = to_string(int(numberf1/number2));
+      else if (int(numberf1/number2) == 0)
+        result = to_string(numberf1-number2*int(numberf1/number2))+"/"+to_string(number2);
       else
         result = to_string(int(numberf1/number2))+"+"+to_string(numberf1-number2*int(numberf1/number2))+"/"+to_string(number2);
     }
     else if (!fnum1 && fnum2) {
       if (roundf((number1-numberf2*int(number1/numberf2))*1000000) == 0)
         result = to_string(int(number1/numberf2));
+      else if (int(number1/numberf2) == 0)
+        result = to_string(number1-numberf2*int(number1/numberf2))+"/"+to_string(numberf2);
       else
         result = to_string(int(number1/numberf2))+"+"+to_string(number1-numberf2*int(number1/numberf2))+"/"+to_string(numberf2);
     }
     else {
       if (number1%number2 == 0)
         result = to_string(int(number1/number2));
+      else if (int(number1/number2) == 0)
+        result = to_string(number1-number2*int(number1/number2))+"/"+to_string(number2);
       else
         result = to_string(int(number1/number2))+"+"+to_string(number1-number2*int(number1/number2))+"/"+to_string(number2);
     }
@@ -132,12 +140,90 @@ string calcLite(string str,int i) {
   return result;
 }
 
+string transformation(string str) {
+  int transform = 0;
+  do {
+    transform = 0;
+    for (int i = 0;i < str.size();i++) {
+      if ((str[i] == '+') || (str[i] == '-')) {
+        int j = i;
+        int sump = 0;
+        int summ = 0;
+        while ((str[j] == '+') || (str[j] == '-')) {
+          if (str[j] == '+')
+            sump++;
+          else
+            summ++;
+          j++;
+        }
+        if (sump+summ > 1) {
+          if (summ%2==0)
+            str.replace(i,sump+summ,"+");
+          else
+            str.replace(i,sump+summ,"-");
+          transform++;
+        }
+      }
+      else if (str[i] == '*') {
+        int j = i;
+        int sum = 0;
+        while (str[j] == '*') {
+          sum++;
+          j++;
+        }
+        if (sum > 1) {
+          str.replace(i,sum,"*");
+          transform++;
+        }
+      }
+      else if (str[i] == '/') {
+        int j = i;
+        int sum = 0;
+        while (str[j] == '/') {
+          sum++;
+          j++;
+        }
+        if (sum > 1) {
+          str.replace(i,sum,"/");
+          transform++;
+        }
+      }
+      else if (str[i] == '.') {
+        int j = i;
+        int sum = 0;
+        while (str[j] == '.') {
+          sum++;
+          j++;
+        }
+        if (sum > 1) {
+          str.replace(i,sum,".");
+          transform++;
+        }
+      }
+      else if (str[i] == '(') {
+        if (charIsNum(str[i-1])) {
+          str.insert(i,"*");
+          transform++;
+        }
+      }
+      else if (str[i] == ')') {
+        if (charIsNum(str[i+1])) {
+          str.insert(i+1,"*");
+          transform++;
+        }
+      }
+    }
+  } while(transform != 0);
+  return str;
+}
+
 int validateExamples() {
   bool errorSymbol = false;
   bool errorBracket = false;
   bool errorVoid = false;
   int val1 = 0;
   int val2 = 0;
+  int openBrackets = 0;
   char elem[17] = {'1','2','3','4','5','6','7','8','9','0','+','-','*','/','(',')','.'};
 
   for (int i = 0;i < enterData.size();i++) {
@@ -153,72 +239,39 @@ int validateExamples() {
     }
 
     if (enterData[i] == '(') {
+      openBrackets++;
       val1++;
     }
     else if (enterData[i] == ')') {
+      if (openBrackets > 0)
+        openBrackets--;
+      else
+        return -2;
       val2++;
     }
     else if (enterData[i] == '+') {
-      int j = i;
-      int sum = 0;
-      while (enterData[j] == '+') {
-        sum++;
-        j++;
-      }
-      if (sum > 1)
-        enterData.replace(i,sum,"+");
-      if ((enterData[i+1] == ')') || (i+1 == enterData.size())) {
+      if (!((i != enterData.size()-1) && (charIsNum(enterData[i+1]) || (
+        (enterData[i+1] == '(') && ((enterData[i-1] != '*') && (enterData[i-1] != '/'))
+        ))))
         return -4;
-      }
     }
     else if (enterData[i] == '-') {
-      int j = i;
-      int sum = 0;
-      while (enterData[j] == '-') {
-        sum++;
-        j++;
-      }
-      if (sum > 1)
-        enterData.replace(i,sum,"-");
-      if ((enterData[i+1] == ')') || (i+1 == enterData.size())) {
+      if (!((i != enterData.size()-1) && (charIsNum(enterData[i+1]) || (
+        (enterData[i+1] == '(') && ((enterData[i-1] != '*') && (enterData[i-1] != '/'))
+        ))))
         return -5;
-      }
     }
     else if (enterData[i] == '*') {
-      int j = i;
-      int sum = 0;
-      while (enterData[j] == '*') {
-        sum++;
-        j++;
-      }
-      if (sum > 1)
-        enterData.replace(i,sum,"*");
-      if ((enterData[i+1] == ')') || (i+1 == enterData.size())) {
+      if (!((charIsNum(enterData[i-1]) || (enterData[i-1] == ')')) &&
+        (charIsNum(enterData[i+1]) || (enterData[i+1] == '('))))
         return -6;
-      }
     }
     else if (enterData[i] == '/') {
-      int j = i;
-      int sum = 0;
-      while (enterData[j] == '/') {
-        sum++;
-        j++;
-      }
-      if (sum > 1)
-        enterData.replace(i,sum,"/");
-      if ((enterData[i+1] == ')') || (i+1 == enterData.size())) {
+      if (!((charIsNum(enterData[i-1]) || (enterData[i-1] == ')')) &&
+        (charIsNum(enterData[i+1]) || (enterData[i+1] == '('))))
         return -7;
-      }
     }
     else if (enterData[i] == '.') {
-      int j = i;
-      int sum = 0;
-      while (enterData[j] == '.') {
-        sum++;
-        j++;
-      }
-      if (sum > 1)
-        enterData.replace(i,sum,".");
       if (!charIsNum(enterData[i-1]) || !charIsNum(enterData[i+1]))
         return -8;
     }
@@ -226,7 +279,7 @@ int validateExamples() {
 
   if (enterData.empty())
     return -3;
-  else if (val1 != val2)
+  else if ((val1 != val2) || (openBrackets != 0))
     return -2;
   else if (errorSymbol)
     return -1;
@@ -262,10 +315,13 @@ int main() {
     //Checking entry data
     if (enterData == "exit") break;
     else {
-      int validateResult = validateExamples();
+      enterData = transformation(enterData);
       cout << enterData << endl;
+      int validateResult = validateExamples();
+
       if (validateResult == 0) {
-        cout << calcLite(enterData,3) << endl;
+        //cout << calcLite(enterData,3) << endl;
+        cout << 0 << endl;
       }
       // else if (validateExamples() == -1) {
       //   cout << "Invalid enter data" << endl;
@@ -280,8 +336,8 @@ int main() {
       //   continue;
       // }
       else {
-        cout << "Invalid enter data" << endl;
-        cout << "Error code: " << validateResult << endl;
+        //cout << "Invalid enter data" << endl;
+        cout << validateResult << endl;
       }
     }
   }
