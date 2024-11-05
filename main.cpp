@@ -6,10 +6,8 @@
 using namespace std;
 //Global variables
 string enterData;
-int result = 100;
 
-/*Добавить в валидацию проверку на положение точки, на положение знаков (*,+,-,/),
-*/
+/*Доделать деление в calcLite, сделать вывод описания ошибок пользователю (необязательно, но желательно)*/
 
 bool charIsNum(char ch) {
   char elem[10] = {'1','2','3','4','5','6','7','8','9','0'};
@@ -69,6 +67,12 @@ string calcLite(string str,int i) {
     number2 = number2*-1;
     numberf2 = numberf2*-1;
   }
+
+  float abs_fnum1 = abs(numberf1);
+  float abs_fnum2 = abs(numberf2);
+  int abs_num1 = abs(number1);
+  int abs_num2 = abs(number2);
+
   //Variables
   string result = "";
   //Operations
@@ -104,6 +108,7 @@ string calcLite(string str,int i) {
   }
   else if (str[i] == '/') {
     if (fnum1 && fnum2) {
+      //if (abs_fnum1-abs_fnum2*int(abs_fnum1/abs_fnum2))
       if (roundf((numberf1-numberf2*int(numberf1/numberf2))*1000000) == 0)
         result = to_string(int(numberf1/numberf2));
       else if (int(numberf1/numberf2) == 0)
@@ -137,6 +142,8 @@ string calcLite(string str,int i) {
     }
   }
 
+  if (result[0] != '-')
+    result = "+"+result;
   return result;
 }
 
@@ -263,12 +270,12 @@ int validateExamples() {
     }
     else if (enterData[i] == '*') {
       if (!((charIsNum(enterData[i-1]) || (enterData[i-1] == ')')) &&
-        (charIsNum(enterData[i+1]) || (enterData[i+1] == '('))))
+        (charIsNum(enterData[i+1]) || (enterData[i+1] == '(') || (enterData[i+1] == '+') || (enterData[i+1] == '-'))))
         return -6;
     }
     else if (enterData[i] == '/') {
       if (!((charIsNum(enterData[i-1]) || (enterData[i-1] == ')')) &&
-        (charIsNum(enterData[i+1]) || (enterData[i+1] == '('))))
+        (charIsNum(enterData[i+1]) || (enterData[i+1] == '(') || (enterData[i+1] == '+') || (enterData[i+1] == '-'))))
         return -7;
     }
     else if (enterData[i] == '.') {
@@ -287,22 +294,101 @@ int validateExamples() {
     return 0;
 }
 
-int solvingExamples(string str) {
+string solvingExamples(string str) {
   if (str.find("(") == -1) {
-    if ((str.find("*") != -1) || (str.find("/") != -1)) {
-      int end_str = str.size();
-      for (int i = 0;i < end_str;i++) {
-        if ((str[i] == '*') || (str[i] == '/')) {
-          calcLite(str,i);
+    string str_save;
+    do {
+      str_save = str;
+      if ((str.find("*") != -1) || (str.find("/") != -1)) {
+        for (int i = 0;i < str.size();i++) {
+          if ((str[i] == '*') || (str[i] == '/')) {
+            int sum1 = 0;
+            int j1 = i-1;
+            int sum2 = 0;
+            int j2 = i+1;
+            while (charIsNum(str[j1]) || (str[j1] == '.')) {
+              sum1++;
+              j1--;
+            }
+            if ((str[j1] == '-') || (str[j1] == '+'))
+              sum1++;
+
+            if ((str[j2] == '-') || (str[j2] == '+')) {
+              sum2++;
+              j2++;
+            }
+            while (charIsNum(str[j2]) || (str[j1] == '.')) {
+              sum2++;
+              j2++;
+            }
+            string resstr = calcLite(str,i);
+            str.replace(i-sum1,sum1+sum2+1,resstr);
+            i = i-sum1+resstr.size()-1;
+          }
         }
       }
-    }
+      else {
+        for (int i = 0;i < str.size();i++) {
+          if (((str[i] == '+') || (str[i] == '-')) && (i > 0)) {
+            int sum1 = 0;
+            int j1 = i-1;
+            int sum2 = 0;
+            int j2 = i+1;
+            while (charIsNum(str[j1]) || (str[j1] == '.')) {
+              sum1++;
+              j1--;
+            }
+            if ((str[j1] == '-') || (str[j1] == '+'))
+              sum1++;
+
+            if ((str[j2] == '-') || (str[j2] == '+')) {
+              sum2++;
+              j2++;
+            }
+            while (charIsNum(str[j2]) || (str[j1] == '.')) {
+              sum2++;
+              j2++;
+            }
+            string resstr = calcLite(str,i);
+            str.replace(i-sum1,sum1+sum2+1,resstr);
+            i = i-sum1+resstr.size()-1;
+          }
+        }
+      }
+    } while(((str.find("*") != -1) || (str.find("/") != -1) || (str.find("+") != -1) || (str.find("-") != -1)) && (str_save.compare(str) != 0));
   }
   else {
+    bool bracketOpen = false;
+    int bOpenVal = 0;
+    int placeBegin = 0;
+    string inBracket = "";
+    for (int i = 0;i < str.size();i++) {
+      if (str[i] == '(') {
+        if (bracketOpen == false) {
+          bracketOpen = true;
+          placeBegin = i;
+        }
+        bOpenVal++;
+      }
+      else if (str[i] == ')') {
+        bOpenVal--;
+        if (bOpenVal == 0) {
+          bracketOpen = false;
+          inBracket.erase(0,1);
+          string strRes = solvingExamples(inBracket);
+          str.replace(placeBegin,inBracket.size()+2,strRes);
+          i = placeBegin + strRes.size()-1;
 
+          inBracket = "";
+        }
+      }
+      if (bracketOpen == true)
+        inBracket = inBracket + str[i];
+    }
+    str = solvingExamples(str);
   }
 
-  return 0;
+  return str;
 }
 //Entry point
 int main() {
@@ -320,8 +406,8 @@ int main() {
       int validateResult = validateExamples();
 
       if (validateResult == 0) {
-        //cout << calcLite(enterData,3) << endl;
-        cout << 0 << endl;
+        cout << solvingExamples(enterData) << endl;
+        //cout << 0 << endl;
       }
       // else if (validateExamples() == -1) {
       //   cout << "Invalid enter data" << endl;
@@ -336,8 +422,7 @@ int main() {
       //   continue;
       // }
       else {
-        //cout << "Invalid enter data" << endl;
-        cout << validateResult << endl;
+        cout << "Invalid enter data (" << validateResult << ")" << endl;
       }
     }
   }
