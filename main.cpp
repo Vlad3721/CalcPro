@@ -4,6 +4,34 @@
 #include <cmath>
 //Namespace
 using namespace std;
+//Macros
+#define DIVISION(a,b,abs_a,abs_b) \
+r = modf(float(abs_a)/abs_b,&intpart); \
+if (roundf((abs_a-abs_b*floorf(intpart))*1000000) == 0) { \
+  r = modf(abs_a/abs_b,&intpart); \
+  if (((a < 0) && (b >= 0)) || ((a >= 0) && (b < 0))) \
+    result = result + "-"; \
+  result = result + to_string(roundf(intpart)); \
+} \
+else { \
+  if (((a < 0) && (b >= 0)) || ((a >= 0) && (b < 0))) \
+    result = result + "-"; \
+  else \
+    result = result + "+"; \
+  r = modf(float(abs_a)/abs_b*10000,&intpart); \
+  if (roundf(r*1000000) == 0) { \
+    result = result + to_string(float(abs_a)/abs_b); \
+  } \
+  else { \
+    r = modf(float(abs_a)/abs_number20,&intpart); \
+    result = result + to_string(abs_a-abs_b*floorf(intpart))+"/"+to_string(abs_b); \
+    if (floorf(intpart) != 0) { \
+      result = to_string(floorf(intpart)) + result; \
+      if (((a < 0) && (b >= 0)) || ((a >= 0) && (b < 0))) \
+        result = "-" + result; \
+    } \
+  } \
+}
 //Global variables
 string enterData;
 
@@ -38,20 +66,20 @@ string calcLite(string str,int i) {
 
   int numIsFloat = 0;
   //Read first number
-  while (charIsNum(str[n1]) || (str[n1] == '.') || (str[n1] == ',')) {
+  while (charIsNum(str[n1]) || (str[n1] == '.')) {
     numS1 = str[n1] + numS1;
     n1--;
   }
   //Read second number
   if ((str[n2] == '-') || (str[n2] == '+'))
     n2++;
-  while (charIsNum(str[n2]) || (str[n2] == '.') || (str[n2] == ',')) {
+  while (charIsNum(str[n2]) || (str[n2] == '.')) {
     numS2 = numS2 + str[n2];
     n2++;
   }
 
   //Transformation first number from string to integer
-  if ((numS1.find(".") == -1) && (numS1.find(",") == -1)) {
+  if (numS1.find(".") == -1) {
     number10 = stoi(numS1);
     abs_number10 = abs(number10);
   }
@@ -67,7 +95,7 @@ string calcLite(string str,int i) {
   }
 
   //Transformation second number from string to integer
-  if ((numS2.find(".") == -1) && (numS2.find(",") == -1)) {
+  if (numS2.find(".") == -1) {
     number20 = stoi(numS2);
     abs_number20 = abs(number20);
   }
@@ -146,83 +174,26 @@ string calcLite(string str,int i) {
     }
   }
   else if (str[i] == '/') {
-    #define REM00 (abs_number10-abs_number20*int(abs_number10/abs_number20))
-    #define REM01 (abs_number10-abs_number21*int(abs_number10/abs_number21))
-    #define REM10 (abs_number11-abs_number20*int(abs_number11/abs_number20))
-    #define REM11 (abs_number11-abs_number21*int(abs_number11/abs_number21))
+    //Variables (using in macro "DIVISION")
+    float intpart = 0.0;
+    float r = 0.0;
     switch (numIsFloat) {
       case 0:
-        if (roundf(REM00*1000000) == 0) {
-          result = to_string(int(number10/number20));
-        }
-        else if (int(number10/number20) == 0) {
-          if (((number10 < 0) && (number20 >= 0)) || ((number10 >= 0) && (number20 < 0)))
-            result = "-"+to_string(REM00)+"/"+to_string(abs_number20);
-          else
-            result = to_string(REM00)+"/"+to_string(abs_number20);
-        }
-        else {
-          if (((number10 < 0) && (number20 >= 0)) || ((number10 >= 0) && (number20 < 0)))
-            result = "-"+to_string(int(abs_number10/abs_number20))+"-"+to_string(REM00)+"/"+to_string(abs_number20);
-          else
-            result = to_string(int(abs_number10/abs_number20))+"+"+to_string(REM00)+"/"+to_string(abs_number20);
-        }
+        DIVISION(number10,number20,abs_number10,abs_number20)
         break;
       case 1:
-        if (roundf(REM01*1000000) == 0) {
-          result = to_string(int(number10/number21));
-        }
-        else if (int(number10/number21) == 0) {
-          if (((number10 < 0) && (number21 >= 0)) || ((number10 >= 0) && (number21 < 0)))
-            result = "-"+to_string(REM01)+"/"+to_string(abs_number21);
-          else
-            result = to_string(REM01)+"/"+to_string(abs_number21);
-        }
-        else {
-          if (((number10 < 0) && (number21 >= 0)) || ((number10 >= 0) && (number21 < 0)))
-            result = "-"+to_string(int(abs_number10/abs_number21))+"-"+to_string(REM00)+"/"+to_string(abs_number21);
-          else
-            result = to_string(int(abs_number10/abs_number21))+"+"+to_string(REM00)+"/"+to_string(abs_number21);
-        }
+        DIVISION(number10,number21,abs_number10,abs_number21)
         break;
       case 10:
-        if (roundf(REM10*1000000) == 0) {
-          result = to_string(int(number11/number20));
-        }
-        else if (int(number11/number20) == 0) {
-          if (((number11 < 0) && (number20 >= 0)) || ((number11 >= 0) && (number20 < 0)))
-            result = "-"+to_string(REM10)+"/"+to_string(abs_number20);
-          else
-            result = to_string(REM10)+"/"+to_string(abs_number20);
-        }
-        else {
-          if (((number11 < 0) && (number20 >= 0)) || ((number11 >= 0) && (number20 < 0)))
-            result = "-"+to_string(int(abs_number11/abs_number20))+"-"+to_string(REM00)+"/"+to_string(abs_number20);
-          else
-            result = to_string(int(abs_number11/abs_number20))+"+"+to_string(REM00)+"/"+to_string(abs_number20);
-        }
+        DIVISION(number11,number20,abs_number11,abs_number20)
         break;
       case 11:
-        if (roundf(REM11*1000000) == 0) {
-          result = to_string(int(number11/number21));
-        }
-        else if (int(number11/number21) == 0) {
-          if (((number11 < 0) && (number21 >= 0)) || ((number11 >= 0) && (number21 < 0)))
-            result = "-"+to_string(REM11)+"/"+to_string(abs_number21);
-          else
-            result = to_string(REM11)+"/"+to_string(abs_number21);
-        }
-        else {
-          if (((number11 < 0) && (number21 >= 0)) || ((number11 >= 0) && (number21 < 0)))
-            result = "-"+to_string(int(abs_number11/abs_number21))+"-"+to_string(REM11)+"/"+to_string(abs_number21);
-          else
-            result = to_string(int(abs_number11/abs_number21))+"+"+to_string(REM11)+"/"+to_string(abs_number21);
-        }
+        DIVISION(number11,number21,abs_number11,abs_number21)
         break;
     }
   }
 
-  if (result[0] != '-')
+  if ((result[0] != '-') && (result[0] != '+'))
     result = "+"+result;
   return result;
 }
@@ -278,6 +249,7 @@ string transformation(string str) {
       else if (str[i] == '.') {
         int j = i;
         int sum = 0;
+        int openZero = 0;
         while (str[j] == '.') {
           sum++;
           j++;
@@ -286,18 +258,27 @@ string transformation(string str) {
           str.replace(i,sum,".");
           transform++;
         }
-      }
-      else if (str[i] == ',') {
-        int j = i;
-        int sum = 0;
-        while (str[j] == ',') {
-          sum++;
+        j = i+1;
+        while (charIsNum(str[j])) {
+          if (str[j] == '0')
+            openZero++;
+          else
+            openZero = 0;
           j++;
         }
-        if (sum > 1) {
-          str.replace(i,sum,",");
+        if (openZero > 0) {
+          str.erase(j-openZero,openZero);
           transform++;
+          if (j-openZero == i+1) {
+            str.erase(i,1);
+            i = i-1;
+            transform++;
+          }
         }
+      }
+      else if (str[i] == ',') {
+        str[i] = '.';
+        transform++;
       }
       else if (str[i] == '(') {
         if (charIsNum(str[i-1])) {
@@ -323,8 +304,8 @@ int validateExamples() {
   int val1 = 0;
   int val2 = 0;
   int openBrackets = 0;
-  const int heightElemArray = 18;
-  char elem[heightElemArray] = {'1','2','3','4','5','6','7','8','9','0','+','-','*','/','(',')','.',','};
+  const int heightElemArray = 17;
+  char elem[heightElemArray] = {'1','2','3','4','5','6','7','8','9','0','+','-','*','/','(',')','.'};
 
   for (int i = 0;i < enterData.size();i++) {
     bool correctSymbol = false;
@@ -375,10 +356,6 @@ int validateExamples() {
       if (!charIsNum(enterData[i-1]) || !charIsNum(enterData[i+1]))
         return -8;
     }
-    else if (enterData[i] == ',') {
-      if (!charIsNum(enterData[i-1]) || !charIsNum(enterData[i+1]))
-        return -9;
-    }
   }
 
   if (enterData.empty())
@@ -402,7 +379,7 @@ string solvingExamples(string str) {
           int j1 = i-1;
           int sum2 = 0;
           int j2 = i+1;
-          while (charIsNum(str[j1]) || (str[j1] == '.') || (str[j1] == ',')) {
+          while (charIsNum(str[j1]) || (str[j1] == '.')) {
             sum1++;
             j1--;
           }
@@ -413,7 +390,7 @@ string solvingExamples(string str) {
               sum2++;
               j2++;
             }
-            while (charIsNum(str[j2]) || (str[j2] == '.') || (str[j2] == ',')) {
+            while (charIsNum(str[j2]) || (str[j2] == '.')) {
               sum2++;
               j2++;
             }
@@ -422,6 +399,7 @@ string solvingExamples(string str) {
             i = i-sum1+resstr.size()-1;
         }
       }
+      str = transformation(str);
       //cout << endl << str << endl;
     } while(((str.find("*") != -1) || (str.find("/") != -1) || (str.find("+") != -1) || (str.find("-") != -1)) && (str_save.compare(str) != 0));
   }
@@ -455,7 +433,7 @@ string solvingExamples(string str) {
     }
     str = solvingExamples(str);
   }
-
+  str = transformation(str);
   return str;
 }
 //Entry point
