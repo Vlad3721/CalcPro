@@ -24,7 +24,7 @@ else { \
   } \
   else { \
     r = modf(float(abs_a)/abs_number20,&intpart); \
-    result = result + to_string(abs_a-abs_b*floorf(intpart))+"/"+to_string(abs_b); \
+    result = result + "#" + to_string(abs_a-abs_b*floorf(intpart))+"/"+to_string(abs_b) + "#"; \
     if (floorf(intpart) != 0) { \
       result = to_string(floorf(intpart)) + result; \
       if (((a < 0) && (b >= 0)) || ((a >= 0) && (b < 0))) \
@@ -35,7 +35,7 @@ else { \
 //Global variables
 string enterData;
 
-/*Доделать деление в calcLite, сделать вывод описания ошибок пользователю (необязательно, но желательно)*/
+/**/
 
 bool charIsNum(char ch) {
   char elem[10] = {'1','2','3','4','5','6','7','8','9','0'};
@@ -73,16 +73,31 @@ string calcLite(string str,int i) {
   //Read second number
   if ((str[n2] == '-') || (str[n2] == '+'))
     n2++;
+  // if (str[n2] == '#') {
+  //   int u = n2+1;
+  //   while (true) {
+  //     if (str[u] == '#') {
+  //       str.erase(u,1);
+  //       break;
+  //     }
+  //     else {
+  //       u++;
+  //     }
+  //   }
+  //   n2++;
+  // }
   while (charIsNum(str[n2]) || (str[n2] == '.')) {
     numS2 = numS2 + str[n2];
     n2++;
   }
 
-  //Transformation first number from string to integer
+  //Transformation first number
+  //String to integer
   if (numS1.find(".") == -1) {
     number10 = stoi(numS1);
     abs_number10 = abs(number10);
   }
+  //String to float
   else {
     number11 = stof(numS1);
     abs_number11 = abs(number11);
@@ -94,11 +109,13 @@ string calcLite(string str,int i) {
     number11 *= -1;
   }
 
-  //Transformation second number from string to integer
+  //Transformation second number
+  //String to integer
   if (numS2.find(".") == -1) {
     number20 = stoi(numS2);
     abs_number20 = abs(number20);
   }
+  //String to float
   else {
     number21 = stof(numS2);
     abs_number21= abs(number21);
@@ -109,20 +126,6 @@ string calcLite(string str,int i) {
     number20 *= -1;
     number21 *= -1;
   }
-
-  // {cout << endl;
-  // cout << number10 << endl;
-  // cout << abs_number10 << endl;
-  // cout << number11 << endl;
-  // cout << abs_number11 << endl;
-  // cout << endl;
-  // cout << number20 << endl;
-  // cout << abs_number20 << endl;
-  // cout << number21 << endl;
-  // cout << abs_number21 << endl;
-  // cout << endl;
-  // cout << numIsFloat << endl;
-  // cout << endl;}
 
   //Operations
   if (str[i] == '+') {
@@ -379,24 +382,43 @@ string solvingExamples(string str) {
           int j1 = i-1;
           int sum2 = 0;
           int j2 = i+1;
+          if (str[j1] == '#')
+            continue;
           while (charIsNum(str[j1]) || (str[j1] == '.')) {
             sum1++;
             j1--;
           }
+          if (str[j1] == '#')
+            continue;
           if ((str[j1] == '-') || (str[j1] == '+'))
             sum1++;
 
-            if ((str[j2] == '-') || (str[j2] == '+')) {
-              sum2++;
-              j2++;
+          if ((str[j2] == '-') || (str[j2] == '+')) {
+            sum2++;
+            j2++;
+          }
+          if (str[j2] == '#') {
+            str.erase(j2,1);
+            int u = j2+1;
+            while (true) {
+              if (str[u] == '#') {
+                str.erase(u,1);
+                break;
+              }
+              else {
+                u++;
+              }
             }
-            while (charIsNum(str[j2]) || (str[j2] == '.')) {
-              sum2++;
-              j2++;
-            }
-            string resstr = calcLite(str,i);
-            str.replace(i-sum1,sum1+sum2+1,resstr);
-            i = i-sum1+resstr.size()-1;
+          }
+          while (charIsNum(str[j2]) || (str[j2] == '.')) {
+            sum2++;
+            j2++;
+          }
+          if (str[j2] == '#')
+            continue;
+          string resstr = calcLite(str,i);
+          str.replace(i-sum1,sum1+sum2+1,resstr);
+          i = i-sum1+resstr.size()-1;
         }
       }
       str = transformation(str);
@@ -452,7 +474,11 @@ int main() {
       int validateResult = validateExamples();
 
       if (validateResult == 0) {
-        cout << solvingExamples(enterData) << endl;
+        string FStadia = solvingExamples(enterData);
+        // while (FStadia.find("#") != -1) {
+        //   FStadia.erase(FStadia.find("#"),1);
+        // }
+        cout << FStadia << endl;
       }
       else {
         cout << "Invalid enter data (" << validateResult << ")" << endl;
